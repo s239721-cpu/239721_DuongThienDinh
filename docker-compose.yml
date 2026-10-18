@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGODB_URI=mongodb+srv://admin:admin123@cluster0.u8oznzw.mongodb.net/school?appName=Cluster0
+
+  frontend:
+    build: ./client
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend

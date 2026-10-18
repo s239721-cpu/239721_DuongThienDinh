@@ -5,9 +5,12 @@ function App() {
   const [formData, setFormData] = useState({ studentId: '', name: '', email: '' });
   const [editingId, setEditingId] = useState(null);
 
+  // Đường dẫn gốc chuẩn của API
+  const API_URL = 'http://localhost:5000/api/students';
+
   const fetchStudents = async () => {
     try {
-      const res = await fetch('/api/students');
+      const res = await fetch(API_URL);
       const data = await res.json();
       setStudents(data);
     } catch (err) {
@@ -21,25 +24,30 @@ function App() {
     e.preventDefault();
     try {
       if (editingId) {
-        const res = await fetch(`/api/students/${editingId}`, {
+        // Chỉ gửi name và email
+        const updatePayload = { name: formData.name, email: formData.email };
+        
+        // Sửa chuẩn URL: http://localhost:5000/api/students/{editingId}
+        const res = await fetch(`${API_URL}/${editingId}`, {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
+          body: JSON.stringify(updatePayload)
         });
+
         if (res.ok) {
           alert('Cập nhật sinh viên thành công!');
-          setEditingId(null);
-          setFormData({ studentId: '', name: '', email: '' });
+          handleCancelEdit();
           fetchStudents();
         } else {
           alert('Lỗi cập nhật sinh viên!');
         }
       } else {
-        const res = await fetch('/api/students', {
+        const res = await fetch(API_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(formData)
         });
+
         if (res.ok) {
           alert('Thêm sinh viên thành công!');
           setFormData({ studentId: '', name: '', email: '' });
@@ -59,13 +67,20 @@ function App() {
     setFormData({ studentId: s.studentId, name: s.name, email: s.email });
   };
 
+  const handleCancelEdit = () => {
+    setEditingId(null);
+    setFormData({ studentId: '', name: '', email: '' });
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Xác nhận xóa sinh viên này?')) {
       try {
-        const res = await fetch(`/api/students/${id}`, { method: 'DELETE' });
+        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
         if (res.ok) {
           alert('Xóa sinh viên thành công!');
           fetchStudents();
+        } else {
+          alert('Lỗi xóa sinh viên!');
         }
       } catch (err) {
         console.error('Lỗi xóa:', err);
@@ -78,12 +93,38 @@ function App() {
       <h2>Quản Lý Sinh Viên</h2>
 
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
-        <input type="text" placeholder="MSSV" value={formData.studentId} onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} required />
-        <input type="text" placeholder="Họ và tên" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
-        <input type="email" placeholder="Email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} required />
-        <button type="submit" style={{ padding: '8px', cursor: 'pointer' }}>
-          {editingId ? 'Cập nhật sinh viên' : 'Thêm sinh viên'}
-        </button>
+        <input 
+          type="text" 
+          placeholder="MSSV" 
+          value={formData.studentId} 
+          onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
+          disabled={!!editingId} 
+          required 
+        />
+        <input 
+          type="text" 
+          placeholder="Họ và tên" 
+          value={formData.name} 
+          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
+          required 
+        />
+        <input 
+          type="email" 
+          placeholder="Email" 
+          value={formData.email} 
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
+          required 
+        />
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button type="submit" style={{ padding: '8px', cursor: 'pointer', flex: 1 }}>
+            {editingId ? 'Cập nhật sinh viên' : 'Thêm sinh viên'}
+          </button>
+          {editingId && (
+            <button type="button" onClick={handleCancelEdit} style={{ padding: '8px', cursor: 'pointer' }}>
+              Hủy
+            </button>
+          )}
+        </div>
       </form>
 
       <h3>Danh sách sinh viên</h3>

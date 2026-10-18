@@ -1,3 +1,4 @@
+global.crypto = require('crypto');
 const mongoose = require('mongoose');
 
 const MONGO_URI = "mongodb+srv://admin:admin123@cluster0.u8oznzw.mongodb.net/school?retryWrites=true&w=majority";

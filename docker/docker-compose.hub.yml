@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  # Câu 51, 53, 55: Service Backend
+  backend:
+    image: duongthiendinh/mern-backend:1.0   # C51: Dùng Image từ Docker Hub
+    ports:
+      - "5000:5000"                           # C53: Ánh xạ port 5000:5000
+    environment:
+      - mongodb+srv://<db_username>:<db_password>@cluster0.u8oznzw.mongodb.net/?appName=Cluster0 # C55: Chuỗi kết nối MongoDB Atlas của bạn
+    restart: always
+
+  # Câu 52, 54: Service Frontend
+  frontend:
+    image: duongthiendinh/mern-frontend:1.0  # C52: Dùng Image từ Docker Hub
+    ports:
+      - "3000:3000"                           # C54: Ánh xạ port 3000 ra máy local
+    depends_on:
+      - backend
+    restart: always
