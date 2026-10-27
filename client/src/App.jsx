@@ -1,152 +1,67 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+
+const API_URL = import.meta.env.VITE_API_URL || 'https://api-239721.onrender.com';
 
 function App() {
-  const [students, setStudents] = useState([]);
-  const [formData, setFormData] = useState({ studentId: '', name: '', email: '' });
-  const [editingId, setEditingId] = useState(null);
+  const [employees, setEmployees] = useState([]);
+  const [form, setForm] = useState({ employeeId: '', fullName: '', email: '', department: '', position: '' });
 
-  // Đường dẫn gốc chuẩn của API
-  const API_URL = 'http://localhost:5000/api/students';
-
-  const fetchStudents = async () => {
+  const fetchEmployees = async () => {
     try {
-      const res = await fetch(API_URL);
-      const data = await res.json();
-      setStudents(data);
+      const res = await axios.get(`${API_URL}/api/employees`);
+      setEmployees(res.data);
     } catch (err) {
-      console.error('Lỗi lấy danh sách:', err);
+      console.error("Lỗi kết nối API:", err);
     }
   };
 
-  useEffect(() => { fetchStudents(); }, []);
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      if (editingId) {
-        // Chỉ gửi name và email
-        const updatePayload = { name: formData.name, email: formData.email };
-        
-        // Sửa chuẩn URL: http://localhost:5000/api/students/{editingId}
-        const res = await fetch(`${API_URL}/${editingId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(updatePayload)
-        });
-
-        if (res.ok) {
-          alert('Cập nhật sinh viên thành công!');
-          handleCancelEdit();
-          fetchStudents();
-        } else {
-          alert('Lỗi cập nhật sinh viên!');
-        }
-      } else {
-        const res = await fetch(API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-
-        if (res.ok) {
-          alert('Thêm sinh viên thành công!');
-          setFormData({ studentId: '', name: '', email: '' });
-          fetchStudents();
-        } else {
-          alert('Lỗi thêm sinh viên!');
-        }
-      }
+      await axios.post(`${API_URL}/api/employees`, form);
+      setForm({ employeeId: '', fullName: '', email: '', department: '', position: '' });
+      fetchEmployees();
     } catch (err) {
-      alert('Lỗi kết nối Server Backend!');
-      console.error(err);
-    }
-  };
-
-  const handleEdit = (s) => {
-    setEditingId(s._id);
-    setFormData({ studentId: s.studentId, name: s.name, email: s.email });
-  };
-
-  const handleCancelEdit = () => {
-    setEditingId(null);
-    setFormData({ studentId: '', name: '', email: '' });
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Xác nhận xóa sinh viên này?')) {
-      try {
-        const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
-        if (res.ok) {
-          alert('Xóa sinh viên thành công!');
-          fetchStudents();
-        } else {
-          alert('Lỗi xóa sinh viên!');
-        }
-      } catch (err) {
-        console.error('Lỗi xóa:', err);
-      }
+      alert("Lỗi khi thêm nhân viên!");
     }
   };
 
   return (
-    <div style={{ padding: '30px', fontFamily: 'Arial, sans-serif', maxWidth: '700px' }}>
-      <h2>Quản Lý Sinh Viên</h2>
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '30px' }}>
-        <input 
-          type="text" 
-          placeholder="MSSV" 
-          value={formData.studentId} 
-          onChange={(e) => setFormData({ ...formData, studentId: e.target.value })} 
-          disabled={!!editingId} 
-          required 
-        />
-        <input 
-          type="text" 
-          placeholder="Họ và tên" 
-          value={formData.name} 
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })} 
-          required 
-        />
-        <input 
-          type="email" 
-          placeholder="Email" 
-          value={formData.email} 
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })} 
-          required 
-        />
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button type="submit" style={{ padding: '8px', cursor: 'pointer', flex: 1 }}>
-            {editingId ? 'Cập nhật sinh viên' : 'Thêm sinh viên'}
-          </button>
-          {editingId && (
-            <button type="button" onClick={handleCancelEdit} style={{ padding: '8px', cursor: 'pointer' }}>
-              Hủy
-            </button>
-          )}
-        </div>
+    <div style={{ padding: '20px', maxWidth: '800px', margin: '0 auto' }}>
+      <h2>Quản Lý Nhân Sự</h2>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+        <input placeholder="Mã nhân viên" value={form.employeeId} onChange={e => setForm({...form, employeeId: e.target.value})} required />
+        <input placeholder="Họ và tên" value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required />
+        <input placeholder="Email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} required />
+        <input placeholder="Phòng ban" value={form.department} onChange={e => setForm({...form, department: e.target.value})} />
+        <input placeholder="Chức vụ" value={form.position} onChange={e => setForm({...form, position: e.target.value})} />
+        <button type="submit">Thêm nhân viên</button>
       </form>
 
-      <h3>Danh sách sinh viên</h3>
-      <table border="1" cellPadding="10" cellSpacing="0" style={{ width: '100%', textAlign: 'left' }}>
+      <h3>Danh sách nhân viên</h3>
+      <table border="1" cellPadding="8" style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
-            <th>MSSV</th>
+            <th>Mã NV</th>
             <th>Họ tên</th>
             <th>Email</th>
-            <th>Thao tác</th>
+            <th>Phòng ban</th>
+            <th>Chức vụ</th>
           </tr>
         </thead>
         <tbody>
-          {students.map((s) => (
-            <tr key={s._id}>
-              <td>{s.studentId}</td>
-              <td>{s.name}</td>
-              <td>{s.email}</td>
-              <td>
-                <button onClick={() => handleEdit(s)} style={{ marginRight: '5px' }}>Sửa</button>
-                <button onClick={() => handleDelete(s._id)} style={{ color: 'red' }}>Xóa</button>
-              </td>
+          {employees.map(emp => (
+            <tr key={emp._id || emp.employeeId}>
+              <td>{emp.employeeId}</td>
+              <td>{emp.fullName}</td>
+              <td>{emp.email}</td>
+              <td>{emp.department}</td>
+              <td>{emp.position}</td>
             </tr>
           ))}
         </tbody>
